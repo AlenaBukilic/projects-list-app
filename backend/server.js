@@ -79,7 +79,7 @@ fastify.get("/api/projects", async (request, reply) => {
       query += ` WHERE ${conditions.join(" AND ")}`;
     }
 
-    query += ` ORDER BY "submission date" DESC`;
+    query += ` ORDER BY "project id" DESC`;
 
     const result = await client.query(query, params);
     client.release();

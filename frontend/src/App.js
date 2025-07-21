@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import "./App.css";
 import Modal from "./Modal";
-
-// Create axios instance with base URL
-const api = axios.create({
-  baseURL: "http://localhost:3001",
-  timeout: 5000,
-});
+import {
+  fetchProjects as fetchProjectsApi,
+  createProject as createProjectApi,
+} from "./api/projects";
+import fetchProjectsUtil from "./utils/fetchProjects";
+import createProjectUtil from "./utils/createProject";
 
 function App() {
   const [projects, setProjects] = useState([]);
@@ -26,39 +25,37 @@ function App() {
   const [createError, setCreateError] = useState(null);
   const [creating, setCreating] = useState(false);
 
-  const fetchProjects = async (search = "") => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const params = {};
-      if (search.trim()) {
-        params.search = search.trim();
-      }
-
-      const response = await api.get("/api/projects", { params });
-      setProjects(response.data.data || []);
-      setSearchApplied(response.data.searchApplied || false);
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to fetch projects");
-      console.error("Error fetching projects:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchProjects();
+    fetchProjectsUtil({
+      setLoading,
+      setError,
+      setProjects,
+      setSearchApplied,
+      fetchProjectsApi,
+    });
   }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchProjects(searchTerm);
+    fetchProjectsUtil({
+      search: searchTerm,
+      setLoading,
+      setError,
+      setProjects,
+      setSearchApplied,
+      fetchProjectsApi,
+    });
   };
 
   const handleClearSearch = () => {
     setSearchTerm("");
-    fetchProjects("");
+    fetchProjectsUtil({
+      setLoading,
+      setError,
+      setProjects,
+      setSearchApplied,
+      fetchProjectsApi,
+    });
   };
 
   const handleCreateInputChange = (e) => {
@@ -66,26 +63,23 @@ function App() {
     setCreateForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCreateProject = async (e) => {
-    e.preventDefault();
-    setCreating(true);
-    setCreateError(null);
-    try {
-      await api.post("/api/project", createForm);
-      setShowCreateForm(false);
-      setCreateForm({
-        name: "",
-        status: "",
-        applicant: "",
-        place: "",
-        user: "",
-      });
-      fetchProjects(searchTerm);
-    } catch (err) {
-      setCreateError(err.response?.data?.error || "Failed to create project");
-    } finally {
-      setCreating(false);
-    }
+  const handleCreateProject = (e) => {
+    createProjectUtil({
+      e,
+      createForm,
+      setCreating,
+      setCreateError,
+      setShowCreateForm,
+      setCreateForm,
+      fetchProjectsUtil,
+      searchTerm,
+      setLoading,
+      setError,
+      setProjects,
+      setSearchApplied,
+      createProjectApi,
+      fetchProjectsApi,
+    });
   };
 
   const formatDate = (dateString) => {
@@ -139,7 +133,17 @@ function App() {
           onClick={() => setShowCreateForm((prev) => !prev)}
           disabled={loading || creating}
           title={showCreateForm ? "Cancel" : "Create New Project"}
-          style={{ marginLeft: "0.5rem", fontSize: "1.5rem", width: "2.5rem", height: "2.5rem", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: "bold" }}
+          style={{
+            marginLeft: "0.5rem",
+            fontSize: "1.5rem",
+            width: "2.5rem",
+            height: "2.5rem",
+            borderRadius: "50%",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: "bold",
+          }}
         >
           {showCreateForm ? "×" : "+"}
         </button>
@@ -170,7 +174,16 @@ function App() {
         </form>
         <button
           className="refresh-button"
-          onClick={() => fetchProjects(searchTerm)}
+          onClick={() =>
+            fetchProjectsUtil({
+              search: searchTerm,
+              setLoading,
+              setError,
+              setProjects,
+              setSearchApplied,
+              fetchProjectsApi,
+            })
+          }
           disabled={loading}
         >
           {loading ? "Refreshing..." : "Refresh Data"}
