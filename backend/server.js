@@ -29,7 +29,7 @@ fastify.get("/health", async (request, reply) => {
 // Get all projects with search functionality
 fastify.get("/api/projects", async (request, reply) => {
   try {
-    const { search, projectId, applicant, projectName } = request.query;
+    const { search, projectId, applicant, projectName, status, place } = request.query;
     const client = await pool.connect();
 
     let query = `
@@ -72,6 +72,30 @@ fastify.get("/api/projects", async (request, reply) => {
     if (projectName && projectName.trim()) {
       conditions.push(`"project name" ILIKE $${params.length + 1}`);
       params.push(`%${projectName.trim()}%`);
+    }
+
+    // Handle multi-select status filter
+    if (status) {
+      if (Array.isArray(status)) {
+        const placeholders = status.map((_, i) => `$${params.length + i + 1}`);
+        conditions.push(`status IN (${placeholders.join(", ")})`);
+        params.push(...status);
+      } else if (typeof status === "string" && status.trim()) {
+        conditions.push(`status = $${params.length + 1}`);
+        params.push(status);
+      }
+    }
+
+    // Handle multi-select place filter
+    if (place) {
+      if (Array.isArray(place)) {
+        const placeholders = place.map((_, i) => `$${params.length + i + 1}`);
+        conditions.push(`place IN (${placeholders.join(", ")})`);
+        params.push(...place);
+      } else if (typeof place === "string" && place.trim()) {
+        conditions.push(`place = $${params.length + 1}`);
+        params.push(place);
+      }
     }
 
     // Add WHERE clause if there are conditions
@@ -184,6 +208,50 @@ fastify.post("/api/project", async (request, reply) => {
     return reply.status(500).send({
       success: false,
       error: "Failed to create project",
+      details: error.message,
+    });
+  }
+});
+
+// Get all distinct project statuses
+fastify.get("/api/project-statuses", async (request, reply) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      'SELECT DISTINCT status FROM projects ORDER BY status ASC'
+    );
+    client.release();
+    return {
+      success: true,
+      statuses: result.rows.map(row => row.status).filter(Boolean),
+    };
+  } catch (error) {
+    fastify.log.error(error);
+    return reply.status(500).send({
+      success: false,
+      error: "Failed to fetch statuses",
+      details: error.message,
+    });
+  }
+});
+
+// Get all distinct project places (cities)
+fastify.get("/api/project-places", async (request, reply) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      'SELECT DISTINCT place FROM projects ORDER BY place ASC'
+    );
+    client.release();
+    return {
+      success: true,
+      places: result.rows.map(row => row.place).filter(Boolean),
+    };
+  } catch (error) {
+    fastify.log.error(error);
+    return reply.status(500).send({
+      success: false,
+      error: "Failed to fetch places",
       details: error.message,
     });
   }

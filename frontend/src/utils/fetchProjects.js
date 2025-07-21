@@ -1,5 +1,7 @@
 export default async function fetchProjects({
   search = "",
+  status = [],
+  place = [],
   setLoading,
   setError,
   setProjects,
@@ -12,6 +14,12 @@ export default async function fetchProjects({
     const params = {};
     if (search.trim()) {
       params.search = search.trim();
+    }
+    if (Array.isArray(status) && status.length > 0) {
+      params.status = status;
+    }
+    if (Array.isArray(place) && place.length > 0) {
+      params.place = place;
     }
     const response = await fetchProjectsApi(params);
     setProjects(response.data.data || []);

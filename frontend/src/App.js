@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 import Modal from "./Modal";
 import {
   fetchProjects as fetchProjectsApi,
   createProject as createProjectApi,
+  fetchProjectStatuses,
+  fetchProjectPlaces,
 } from "./api/projects";
 import fetchProjectsUtil from "./utils/fetchProjects";
 import createProjectUtil from "./utils/createProject";
@@ -24,6 +26,43 @@ function App() {
   });
   const [createError, setCreateError] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [statuses, setStatuses] = useState([]);
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [places, setPlaces] = useState([]);
+  const [selectedPlaces, setSelectedPlaces] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownDirection, setDropdownDirection] = useState("down");
+  const dropdownRef = useRef(null);
+
+  // Adjust dropdown direction based on available space
+  useEffect(() => {
+    if (!dropdownOpen || !dropdownRef.current) return;
+    const rect = dropdownRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    if (spaceBelow < 180 && spaceAbove > spaceBelow) {
+      setDropdownDirection("up");
+    } else {
+      setDropdownDirection("down");
+    }
+  }, [dropdownOpen]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]);
 
   useEffect(() => {
     fetchProjectsUtil({
@@ -33,12 +72,38 @@ function App() {
       setSearchApplied,
       fetchProjectsApi,
     });
+    // Fetch all statuses for filter
+    fetchProjectStatuses().then(res => {
+      setStatuses(res.data.statuses || []);
+    });
+    // Fetch all places for filter
+    fetchProjectPlaces().then(res => {
+      setPlaces(res.data.places || []);
+    });
   }, []);
+
+  const handleStatusChange = (e) => {
+    const value = e.target.value;
+    setSelectedStatuses((prev) =>
+      prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value]
+    );
+  };
+
+  const handlePlaceChange = (e) => {
+    const value = e.target.value;
+    setSelectedPlaces((prev) =>
+      prev.includes(value)
+        ? prev.filter((p) => p !== value)
+        : [...prev, value]
+    );
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
     fetchProjectsUtil({
       search: searchTerm,
+      status: selectedStatuses,
+      place: selectedPlaces,
       setLoading,
       setError,
       setProjects,
@@ -49,6 +114,8 @@ function App() {
 
   const handleClearSearch = () => {
     setSearchTerm("");
+    setSelectedStatuses([]);
+    setSelectedPlaces([]);
     fetchProjectsUtil({
       setLoading,
       setError,
@@ -147,6 +214,79 @@ function App() {
         >
           {showCreateForm ? "×" : "+"}
         </button>
+
+        {/* Multi-select status and place filter as dropdown */}
+        {(statuses.length > 0 || places.length > 0) && (
+          <div style={{ position: "relative", minWidth: 180 }} ref={dropdownRef}>
+            <button
+              type="button"
+              className="search-button"
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minWidth: 140, padding: "0.75rem 1rem", background: dropdownOpen ? "#764ba2" : undefined }}
+              onClick={() => setDropdownOpen((open) => !open)}
+              tabIndex={0}
+            >
+              <span style={{ fontWeight: 500, fontSize: 14 }}>
+                {selectedStatuses.length === 0 && selectedPlaces.length === 0
+                  ? "Filter"
+                  : `${selectedStatuses.length} status, ${selectedPlaces.length} city`}
+              </span>
+              <span style={{ marginLeft: 8, fontSize: 16 }}>{dropdownOpen ? "▲" : "▼"}</span>
+            </button>
+            {dropdownOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  [dropdownDirection === "down" ? "top" : "bottom"]: "110%",
+                  left: 0,
+                  zIndex: 10,
+                  background: "#fff",
+                  border: "1px solid #e1e5e9",
+                  borderRadius: 8,
+                  boxShadow: "0 4px 16px rgba(102,126,234,0.10)",
+                  padding: 10,
+                  minWidth: 180,
+                  maxHeight: 320,
+                  overflowY: "auto",
+                }}
+              >
+                {statuses.length > 0 && (
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontWeight: 500, fontSize: 13, marginBottom: 4 }}>Status</div>
+                    {statuses.map((status) => (
+                      <label key={status} style={{ display: "flex", alignItems: "center", fontWeight: 400, fontSize: 14, marginBottom: 4, cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          value={status}
+                          checked={selectedStatuses.includes(status)}
+                          onChange={handleStatusChange}
+                          style={{ marginRight: 6 }}
+                        />
+                        {status}
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {places.length > 0 && (
+                  <div>
+                    <div style={{ fontWeight: 500, fontSize: 13, marginBottom: 4 }}>City</div>
+                    {places.map((place) => (
+                      <label key={place} style={{ display: "flex", alignItems: "center", fontWeight: 400, fontSize: 14, marginBottom: 4, cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          value={place}
+                          checked={selectedPlaces.includes(place)}
+                          onChange={handlePlaceChange}
+                          style={{ marginRight: 6 }}
+                        />
+                        {place}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSearch} className="search-form">
           <div className="search-container">
