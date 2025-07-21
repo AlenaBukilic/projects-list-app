@@ -71,7 +71,7 @@ function App() {
     setCreating(true);
     setCreateError(null);
     try {
-      await api.post("/project", createForm);
+      await api.post("/api/project", createForm);
       setShowCreateForm(false);
       setCreateForm({
         name: "",
