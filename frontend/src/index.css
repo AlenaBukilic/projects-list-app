@@ -306,44 +306,169 @@ th:nth-child(7), td:nth-child(7) { /* Submission Date */
   transform: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .container {
     padding: 10px;
   }
-  
   .header h1 {
     font-size: 2rem;
   }
-  
-  .controls {
-    gap: 0.75rem;
+  .table-header h2 {
+    font-size: 1.1rem;
   }
-  
+  .projects-table {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 6px;
+  }
+  .header {
+    padding: 1.2rem 0;
+    margin-bottom: 1rem;
+  }
+  .header h1 {
+    font-size: 1.3rem;
+  }
+  .header p {
+    font-size: 0.95rem;
+  }
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .search-form {
+    max-width: 100%;
+  }
   .search-container {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.5rem;
   }
-  
   .search-input {
-    min-width: auto;
+    min-width: 0;
+    width: 100%;
+    font-size: 0.95rem;
+    padding: 0.6rem 0.8rem;
   }
-  
   .search-button,
   .clear-button {
     width: 100%;
+    font-size: 0.95rem;
+    padding: 0.7rem 0;
   }
-  
+  .refresh-button {
+    width: 100%;
+    font-size: 0.95rem;
+    padding: 0.7rem 0;
+    align-self: stretch;
+  }
+  .plus-button {
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 1.2rem;
+    margin-left: 0;
+    align-self: flex-end;
+  }
+  .projects-table {
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+  .table-header {
+    padding: 0.7rem;
+  }
+  .table-header h2 {
+    font-size: 1rem;
+  }
+  .table-container {
+    font-size: 0.85rem;
+    overflow-x: auto;
+  }
+  table {
+    min-width: 600px;
+    font-size: 0.85rem;
+  }
   th, td {
-    padding: 0.5rem 0.25rem;
+    padding: 0.4rem 0.2rem;
     font-size: 0.8rem;
   }
-  
   .status {
-    font-size: 0.75rem;
-    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.4rem;
+    min-width: 60px;
   }
-  
+  .loading, .empty-state {
+    padding: 1.2rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 2px;
+  }
+  .header {
+    padding: 0.7rem 0;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+  }
+  .header h1 {
+    font-size: 1rem;
+  }
+  .header p {
+    font-size: 0.8rem;
+  }
+  .controls {
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .search-input {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.5rem;
+  }
+  .search-button,
+  .clear-button,
+  .refresh-button {
+    font-size: 0.85rem;
+    padding: 0.5rem 0;
+  }
+  .plus-button {
+    width: 1.7rem;
+    height: 1.7rem;
+    font-size: 1rem;
+  }
+  .projects-table {
+    border-radius: 4px;
+    font-size: 0.8rem;
+  }
+  .table-header {
+    padding: 0.4rem;
+  }
+  .table-header h2 {
+    font-size: 0.85rem;
+  }
   .table-container {
-    font-size: 0.9rem;
+    font-size: 0.75rem;
+  }
+  table {
+    min-width: 400px;
+    font-size: 0.75rem;
+  }
+  th, td {
+    padding: 0.25rem 0.1rem;
+    font-size: 0.7rem;
+  }
+  .status {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.2rem;
+    min-width: 40px;
+  }
+  .loading, .empty-state {
+    padding: 0.7rem;
+    font-size: 0.85rem;
   }
 } 
