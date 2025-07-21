@@ -46,7 +46,8 @@ code {
 
 .controls {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.5rem;
   align-items: flex-start;
