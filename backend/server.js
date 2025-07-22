@@ -29,7 +29,8 @@ fastify.get("/health", async (request, reply) => {
 // Get all projects with search functionality
 fastify.get("/api/projects", async (request, reply) => {
   try {
-    const { search, projectId, applicant, projectName, status, place } = request.query;
+    const { search, projectId, applicant, projectName, status, place, user } =
+      request.query;
     const client = await pool.connect();
 
     let query = `
@@ -95,6 +96,18 @@ fastify.get("/api/projects", async (request, reply) => {
       } else if (typeof place === "string" && place.trim()) {
         conditions.push(`place = $${params.length + 1}`);
         params.push(place);
+      }
+    }
+
+    // Handle multi-select user filter
+    if (user) {
+      if (Array.isArray(user)) {
+        const placeholders = user.map((_, i) => `$${params.length + i + 1}`);
+        conditions.push(`"user" IN (${placeholders.join(", ")})`);
+        params.push(...user);
+      } else if (typeof user === "string" && user.trim()) {
+        conditions.push(`"user" = $${params.length + 1}`);
+        params.push(user);
       }
     }
 
@@ -192,7 +205,8 @@ fastify.post("/api/project", async (request, reply) => {
         "user"
     `;
     // Capitalize first letter of status
-    const capitalizedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    const capitalizedStatus =
+      status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
     const result = await client.query(insertQuery, [
       name,
       capitalizedStatus,
@@ -220,12 +234,12 @@ fastify.get("/api/project-statuses", async (request, reply) => {
   try {
     const client = await pool.connect();
     const result = await client.query(
-      'SELECT DISTINCT status FROM projects ORDER BY status ASC'
+      "SELECT DISTINCT status FROM projects ORDER BY status ASC"
     );
     client.release();
     return {
       success: true,
-      statuses: result.rows.map(row => row.status).filter(Boolean),
+      statuses: result.rows.map((row) => row.status).filter(Boolean),
     };
   } catch (error) {
     fastify.log.error(error);
@@ -242,18 +256,40 @@ fastify.get("/api/project-places", async (request, reply) => {
   try {
     const client = await pool.connect();
     const result = await client.query(
-      'SELECT DISTINCT place FROM projects ORDER BY place ASC'
+      "SELECT DISTINCT place FROM projects ORDER BY place ASC"
     );
     client.release();
     return {
       success: true,
-      places: result.rows.map(row => row.place).filter(Boolean),
+      places: result.rows.map((row) => row.place).filter(Boolean),
     };
   } catch (error) {
     fastify.log.error(error);
     return reply.status(500).send({
       success: false,
       error: "Failed to fetch places",
+      details: error.message,
+    });
+  }
+});
+
+// Get all distinct project users
+fastify.get("/api/project-users", async (request, reply) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      'SELECT DISTINCT "user" FROM projects ORDER BY "user" ASC'
+    );
+    client.release();
+    return {
+      success: true,
+      users: result.rows.map((row) => row.user).filter(Boolean),
+    };
+  } catch (error) {
+    fastify.log.error(error);
+    return reply.status(500).send({
+      success: false,
+      error: "Failed to fetch users",
       details: error.message,
     });
   }

@@ -3,8 +3,8 @@ import qs from "qs";
 
 const api = axios.create({
   baseURL: "http://localhost:3001",
-  timeout: 5000,
-  paramsSerializer: params => qs.stringify(params, { arrayFormat: "repeat" })
+  timeout: 0,
+  paramsSerializer: (params) => qs.stringify(params, { arrayFormat: "repeat" }),
 });
 
 export function fetchProjects(params) {
@@ -21,4 +21,8 @@ export function fetchProjectStatuses() {
 
 export function fetchProjectPlaces() {
   return api.get("/api/project-places");
-} 
+}
+
+export function fetchProjectUsers() {
+  return api.get("/api/project-users");
+}

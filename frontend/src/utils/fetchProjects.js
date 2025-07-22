@@ -2,11 +2,12 @@ export default async function fetchProjects({
   search = "",
   status = [],
   place = [],
+  user = [],
   setLoading,
   setError,
   setProjects,
   setSearchApplied,
-  fetchProjectsApi
+  fetchProjectsApi,
 }) {
   try {
     setLoading(true);
@@ -21,6 +22,9 @@ export default async function fetchProjects({
     if (Array.isArray(place) && place.length > 0) {
       params.place = place;
     }
+    if (Array.isArray(user) && user.length > 0) {
+      params.user = user;
+    }
     const response = await fetchProjectsApi(params);
     setProjects(response.data.data || []);
     setSearchApplied(response.data.searchApplied || false);
@@ -30,4 +34,4 @@ export default async function fetchProjects({
   } finally {
     setLoading(false);
   }
-} 
+}

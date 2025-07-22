@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
-import Modal from "./Modal";
+import Modal from "./components/Modal";
 import {
   fetchProjects as fetchProjectsApi,
   createProject as createProjectApi,
   fetchProjectStatuses,
   fetchProjectPlaces,
+  fetchProjectUsers,
 } from "./api/projects";
 import fetchProjectsUtil from "./utils/fetchProjects";
 import createProjectUtil from "./utils/createProject";
@@ -17,6 +18,8 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchApplied, setSearchApplied] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showSingleProject, setShowSingleProject] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
   const [createForm, setCreateForm] = useState({
     name: "",
     status: "",
@@ -30,6 +33,8 @@ function App() {
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [places, setPlaces] = useState([]);
   const [selectedPlaces, setSelectedPlaces] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [dropdownDirection, setDropdownDirection] = useState("down");
   const dropdownRef = useRef(null);
@@ -73,12 +78,16 @@ function App() {
       fetchProjectsApi,
     });
     // Fetch all statuses for filter
-    fetchProjectStatuses().then(res => {
+    fetchProjectStatuses().then((res) => {
       setStatuses(res.data.statuses || []);
     });
     // Fetch all places for filter
-    fetchProjectPlaces().then(res => {
+    fetchProjectPlaces().then((res) => {
       setPlaces(res.data.places || []);
+    });
+    // Fetch all users for filter
+    fetchProjectUsers().then((res) => {
+      setUsers(res.data.users || []);
     });
   }, []);
 
@@ -92,9 +101,14 @@ function App() {
   const handlePlaceChange = (e) => {
     const value = e.target.value;
     setSelectedPlaces((prev) =>
-      prev.includes(value)
-        ? prev.filter((p) => p !== value)
-        : [...prev, value]
+      prev.includes(value) ? prev.filter((p) => p !== value) : [...prev, value]
+    );
+  };
+
+  const handleUserChange = (e) => {
+    const value = e.target.value;
+    setSelectedUsers((prev) =>
+      prev.includes(value) ? prev.filter((p) => p !== value) : [...prev, value]
     );
   };
 
@@ -104,6 +118,7 @@ function App() {
       search: searchTerm,
       status: selectedStatuses,
       place: selectedPlaces,
+      user: selectedUsers,
       setLoading,
       setError,
       setProjects,
@@ -116,6 +131,7 @@ function App() {
     setSearchTerm("");
     setSelectedStatuses([]);
     setSelectedPlaces([]);
+    setSelectedUsers([]);
     fetchProjectsUtil({
       setLoading,
       setError,
@@ -216,27 +232,38 @@ function App() {
         </button>
 
         {/* Multi-select status and place filter as dropdown */}
-        {(statuses.length > 0 || places.length > 0) && (
+        {(statuses.length > 0 || places.length > 0 || users.length > 0) && (
           <div
             style={{
               position: "relative",
-              minWidth: 180
+              minWidth: 180,
             }}
             ref={dropdownRef}
           >
             <button
               type="button"
               className="search-button"
-              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minWidth: 140, padding: "0.75rem 1rem", background: dropdownOpen ? "#764ba2" : undefined }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                minWidth: 140,
+                padding: "0.75rem 1rem",
+                background: dropdownOpen ? "#764ba2" : undefined,
+              }}
               onClick={() => setDropdownOpen((open) => !open)}
               tabIndex={0}
             >
               <span style={{ fontWeight: 500, fontSize: 14 }}>
-                {selectedStatuses.length === 0 && selectedPlaces.length === 0
+                {selectedStatuses.length === 0 &&
+                selectedPlaces.length === 0 &&
+                selectedUsers.length === 0
                   ? "Filter"
-                  : `${selectedStatuses.length} status, ${selectedPlaces.length} city`}
+                  : `${selectedStatuses.length} status, ${selectedPlaces.length} city, ${selectedUsers.length} user`}
               </span>
-              <span style={{ marginLeft: 8, fontSize: 16 }}>{dropdownOpen ? "▲" : "▼"}</span>
+              <span style={{ marginLeft: 8, fontSize: 16 }}>
+                {dropdownOpen ? "▲" : "▼"}
+              </span>
             </button>
             {dropdownOpen && (
               <div
@@ -257,9 +284,23 @@ function App() {
               >
                 {statuses.length > 0 && (
                   <div style={{ marginBottom: 10 }}>
-                    <div style={{ fontWeight: 500, fontSize: 13, marginBottom: 4 }}>Status</div>
+                    <div
+                      style={{ fontWeight: 500, fontSize: 13, marginBottom: 4 }}
+                    >
+                      Status
+                    </div>
                     {statuses.map((status) => (
-                      <label key={status} style={{ display: "flex", alignItems: "center", fontWeight: 400, fontSize: 14, marginBottom: 4, cursor: "pointer" }}>
+                      <label
+                        key={status}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          fontWeight: 400,
+                          fontSize: 14,
+                          marginBottom: 4,
+                          cursor: "pointer",
+                        }}
+                      >
                         <input
                           type="checkbox"
                           value={status}
@@ -274,9 +315,23 @@ function App() {
                 )}
                 {places.length > 0 && (
                   <div>
-                    <div style={{ fontWeight: 500, fontSize: 13, marginBottom: 4 }}>City</div>
+                    <div
+                      style={{ fontWeight: 500, fontSize: 13, marginBottom: 4 }}
+                    >
+                      City
+                    </div>
                     {places.map((place) => (
-                      <label key={place} style={{ display: "flex", alignItems: "center", fontWeight: 400, fontSize: 14, marginBottom: 4, cursor: "pointer" }}>
+                      <label
+                        key={place}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          fontWeight: 400,
+                          fontSize: 14,
+                          marginBottom: 4,
+                          cursor: "pointer",
+                        }}
+                      >
                         <input
                           type="checkbox"
                           value={place}
@@ -285,6 +340,37 @@ function App() {
                           style={{ marginRight: 6 }}
                         />
                         {place}
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {users.length > 0 && (
+                  <div style={{ marginBottom: 10 }}>
+                    <div
+                      style={{ fontWeight: 500, fontSize: 13, marginBottom: 4 }}
+                    >
+                      Status
+                    </div>
+                    {users.map((user) => (
+                      <label
+                        key={user}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          fontWeight: 400,
+                          fontSize: 14,
+                          marginBottom: 4,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          value={user}
+                          checked={selectedUsers.includes(user)}
+                          onChange={handleUserChange}
+                          style={{ marginRight: 6 }}
+                        />
+                        {user}
                       </label>
                     ))}
                   </div>
@@ -325,6 +411,7 @@ function App() {
               search: searchTerm,
               status: selectedStatuses,
               place: selectedPlaces,
+              user: selectedUsers,
               setLoading,
               setError,
               setProjects,
@@ -407,6 +494,47 @@ function App() {
         </form>
       </Modal>
 
+      {/* View Project Modal */}
+      <Modal
+        isOpen={showSingleProject}
+        onClose={() => {
+          setShowSingleProject(false);
+          setSelectedProject(null);
+        }}
+      >
+        {selectedProject ? (
+          <>
+            <h2 style={{ marginTop: 0 }}>Project Details</h2>
+            <div className="view-details">
+              <p>
+                <strong>Project ID:</strong> {selectedProject["project id"]}
+              </p>
+              <p>
+                <strong>Name:</strong> {selectedProject["project name"]}
+              </p>
+              <p>
+                <strong>Status:</strong> {selectedProject.status}
+              </p>
+              <p>
+                <strong>Applicant:</strong> {selectedProject.applicant}
+              </p>
+              <p>
+                <strong>Place:</strong> {selectedProject.place}
+              </p>
+              <p>
+                <strong>User:</strong> {selectedProject.user}
+              </p>
+              <p>
+                <strong>Submission Date:</strong>{" "}
+                {formatDate(selectedProject["submission date"])}
+              </p>
+            </div>
+          </>
+        ) : (
+          <p>Loading...</p>
+        )}
+      </Modal>
+
       {error && (
         <div className="error">
           <strong>Error:</strong> {error}
@@ -451,7 +579,14 @@ function App() {
               </thead>
               <tbody>
                 {projects.map((project, index) => (
-                  <tr key={project["project id"] || index}>
+                  <tr
+                    key={project["project id"] || index}
+                    onClick={() => {
+                      setSelectedProject(project);
+                      setShowSingleProject(true);
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
                     <td>{project["project id"] || "N/A"}</td>
                     <td>{project["project name"] || "N/A"}</td>
                     <td>
