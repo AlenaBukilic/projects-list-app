@@ -217,7 +217,13 @@ function App() {
 
         {/* Multi-select status and place filter as dropdown */}
         {(statuses.length > 0 || places.length > 0) && (
-          <div style={{ position: "relative", minWidth: 180 }} ref={dropdownRef}>
+          <div
+            style={{
+              position: "relative",
+              minWidth: 180
+            }}
+            ref={dropdownRef}
+          >
             <button
               type="button"
               className="search-button"
@@ -238,7 +244,7 @@ function App() {
                   position: "absolute",
                   [dropdownDirection === "down" ? "top" : "bottom"]: "110%",
                   left: 0,
-                  zIndex: 10,
+                  zIndex: 1000,
                   background: "#fff",
                   border: "1px solid #e1e5e9",
                   borderRadius: 8,
@@ -317,6 +323,8 @@ function App() {
           onClick={() =>
             fetchProjectsUtil({
               search: searchTerm,
+              status: selectedStatuses,
+              place: selectedPlaces,
               setLoading,
               setError,
               setProjects,

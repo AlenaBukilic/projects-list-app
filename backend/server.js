@@ -191,9 +191,11 @@ fastify.post("/api/project", async (request, reply) => {
         place,
         "user"
     `;
+    // Capitalize first letter of status
+    const capitalizedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
     const result = await client.query(insertQuery, [
       name,
-      status,
+      capitalizedStatus,
       applicant,
       place,
       user,
