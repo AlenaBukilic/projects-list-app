@@ -349,7 +349,7 @@ function App() {
                     <div
                       style={{ fontWeight: 500, fontSize: 13, marginBottom: 4 }}
                     >
-                      Status
+                      User
                     </div>
                     {users.map((user) => (
                       <label
